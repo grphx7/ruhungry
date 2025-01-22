@@ -1,1 +1,165 @@
-Test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose a Place to Eat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 40%;
+            min-width: 300px;
+            background: #d9d9d9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .list-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .list {
+            flex: 1;
+            background: #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            min-height: 200px;
+        }
+        .list h2 {
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .list ul li {
+            margin: 5px 0;
+            padding: 10px;
+            background: #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .list ul li:hover {
+            background: #bbb;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background: #555;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Choose Where to Eat</h1>
+        <div class="list-container">
+            <div class="list" id="available-list">
+                <h2>Available Options</h2>
+                <ul id="options">
+                    <li data-id="1">Pizza Place</li>
+                    <li data-id="2">Burger Joint</li>
+                    <li data-id="3">Sushi Bar</li>
+                    <li data-id="4">Taco Truck</li>
+                    <li data-id="5">Steakhouse</li>
+                </ul>
+            </div>
+            <div class="list" id="selection-list">
+                <h2>Your Choices</h2>
+                <ul id="selected-options"></ul>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="submit-btn" disabled>Submit</button>
+            <button id="done-btn">Done</button>
+        </div>
+        <div id="result" style="display: none; margin-top: 20px; text-align: center;"></div>
+    </div>
+
+    <script>
+        const optionsList = document.getElementById('options');
+        const selectedList = document.getElementById('selected-options');
+        const submitBtn = document.getElementById('submit-btn');
+        const doneBtn = document.getElementById('done-btn');
+        const resultDiv = document.getElementById('result');
+
+        let scores = {};
+
+        optionsList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                const item = e.target;
+                selectedList.appendChild(item);
+                toggleSubmitButton();
+            }
+        });
+
+        selectedList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                const item = e.target;
+                optionsList.appendChild(item);
+                toggleSubmitButton();
+            }
+        });
+
+        function toggleSubmitButton() {
+            submitBtn.disabled = selectedList.children.length < 5;
+        }
+
+        submitBtn.addEventListener('click', () => {
+            const choices = Array.from(selectedList.children);
+            choices.forEach((item, index) => {
+                const id = item.getAttribute('data-id');
+                scores[id] = (scores[id] || 0) + (5 - index);
+            });
+
+            resetSelections();
+        });
+
+        doneBtn.addEventListener('click', () => {
+            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+            const top3 = sortedScores.slice(0, 3).map(([id, score]) => {
+                return Array.from(optionsList.children).concat(Array.from(selectedList.children))
+                    .find(item => item.getAttribute('data-id') === id)?.textContent;
+            });
+
+            resultDiv.innerHTML = `<h2>Top Choices</h2><p>1. ${top3[0]}</p><p>2. ${top3[1]}</p><p>3. ${top3[2]}</p>`;
+            resultDiv.style.display = 'block';
+        });
+
+        function resetSelections() {
+            Array.from(selectedList.children).forEach(item => {
+                optionsList.appendChild(item);
+            });
+            toggleSubmitButton();
+        }
+    </script>
+</body>
+</html>
