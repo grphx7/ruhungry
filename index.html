@@ -115,7 +115,7 @@
         </div>
         <div class="controls">
             <button id="submit-btn" disabled>Submit</button>
-            <button id="done-btn">Done</button>
+            <button id="reset-btn">Reset Scores</button>
         </div>
         <div id="result" style="display: none; margin-top: 20px; text-align: center;"></div>
         <div class="update-section">
@@ -140,7 +140,7 @@
         const optionsList = document.getElementById('options');
         const selectedList = document.getElementById('selected-options');
         const submitBtn = document.getElementById('submit-btn');
-        const doneBtn = document.getElementById('done-btn');
+        const resetBtn = document.getElementById('reset-btn');
         const resultDiv = document.getElementById('result');
         const updateForm = document.getElementById('update-form');
         const updateBtn = document.getElementById('update-btn');
@@ -174,10 +174,28 @@
                 scores[id] = (scores[id] || 0) + (5 - index);
             });
 
-            resetSelections();
+            const proceed = confirm("Scores have been added. Would you like another person to choose or see the results?");
+
+            if (proceed) {
+                resetSelections();
+            } else {
+                displayResults();
+            }
         });
 
-        doneBtn.addEventListener('click', () => {
+        resetBtn.addEventListener('click', () => {
+            scores = {};
+            alert('Scores have been reset.');
+        });
+
+        function resetSelections() {
+            Array.from(selectedList.children).forEach(item => {
+                optionsList.appendChild(item);
+            });
+            toggleSubmitButton();
+        }
+
+        function displayResults() {
             const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
             const top3 = sortedScores.slice(0, 3).map(([id, score]) => {
                 return Array.from(optionsList.children).concat(Array.from(selectedList.children))
@@ -186,13 +204,6 @@
 
             resultDiv.innerHTML = `<h2>Top Choices</h2><p>1. ${top3[0]}</p><p>2. ${top3[1]}</p><p>3. ${top3[2]}</p>`;
             resultDiv.style.display = 'block';
-        });
-
-        function resetSelections() {
-            Array.from(selectedList.children).forEach(item => {
-                optionsList.appendChild(item);
-            });
-            toggleSubmitButton();
         }
 
         updateBtn.addEventListener('click', () => {
