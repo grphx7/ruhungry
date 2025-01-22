@@ -13,9 +13,9 @@
             padding: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
         }
         .container {
             width: 40%;
@@ -24,6 +24,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin: auto;
         }
         h1 {
             text-align: center;
@@ -34,6 +35,7 @@
             display: flex;
             justify-content: space-between;
             gap: 20px;
+            overflow-y: auto;
         }
         .list {
             flex: 1;
@@ -110,6 +112,7 @@
         <div class="controls">
             <button id="submit-btn" disabled>Submit</button>
             <button id="reset-btn">Reset Scores</button>
+            <button id="reset-all-btn">Reset All</button>
         </div>
         <div id="result" style="display: none; margin-top: 20px; text-align: center;"></div>
         <div class="update-section">
@@ -135,18 +138,21 @@
         const selectedList = document.getElementById('selected-options');
         const submitBtn = document.getElementById('submit-btn');
         const resetBtn = document.getElementById('reset-btn');
+        const resetAllBtn = document.getElementById('reset-all-btn');
         const resultDiv = document.getElementById('result');
         const updateForm = document.getElementById('update-form');
         const updateBtn = document.getElementById('update-btn');
 
         let scores = JSON.parse(localStorage.getItem('scores')) || {};
-        let customOptions = JSON.parse(localStorage.getItem('customOptions')) || [
+        const defaultOptions = [
             "McDonald's", "Burger King", "Wendy's", "Chick-fil-A", "Whataburger",
             "Subway", "Jimmy John's",
             "Taco Bell", "Taco Mayo", "Taco Bueno", "Del Taco",
             "Domino's", "Pizza Hut", "Papa John's", "Little Caesars",
             "KFC", "Popeyes", "Raising Cane's", "Church's Chicken"
         ];
+
+        let customOptions = JSON.parse(localStorage.getItem('customOptions')) || [...defaultOptions];
 
         function loadOptions() {
             optionsList.innerHTML = '';
@@ -217,6 +223,17 @@
             scores = {};
             localStorage.setItem('scores', JSON.stringify(scores));
             alert('Scores have been reset.');
+        });
+
+        resetAllBtn.addEventListener('click', () => {
+            if (confirm('This will reset all options and scores to defaults. Proceed?')) {
+                customOptions = [...defaultOptions];
+                scores = {};
+                localStorage.setItem('customOptions', JSON.stringify(customOptions));
+                localStorage.setItem('scores', JSON.stringify(scores));
+                loadOptions();
+                alert('All options and scores have been reset to defaults.');
+            }
         });
 
         function resetSelections() {
