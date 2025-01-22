@@ -14,6 +14,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             height: 100vh;
         }
         .container {
@@ -76,6 +77,21 @@
             background: #999;
             cursor: not-allowed;
         }
+        .update-section {
+            margin-top: 20px;
+            text-align: center;
+            background: #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+        }
+        .update-section input {
+            width: 90%;
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +118,22 @@
             <button id="done-btn">Done</button>
         </div>
         <div id="result" style="display: none; margin-top: 20px; text-align: center;"></div>
+        <div class="update-section">
+            <h2>Update Food Options</h2>
+            <form id="update-form">
+                <input type="text" id="new-option-1" placeholder="New option 1"><br>
+                <input type="text" id="new-option-2" placeholder="New option 2"><br>
+                <input type="text" id="new-option-3" placeholder="New option 3"><br>
+                <input type="text" id="new-option-4" placeholder="New option 4"><br>
+                <input type="text" id="new-option-5" placeholder="New option 5"><br>
+                <input type="text" id="new-option-6" placeholder="New option 6"><br>
+                <input type="text" id="new-option-7" placeholder="New option 7"><br>
+                <input type="text" id="new-option-8" placeholder="New option 8"><br>
+                <input type="text" id="new-option-9" placeholder="New option 9"><br>
+                <input type="text" id="new-option-10" placeholder="New option 10"><br>
+                <button type="button" id="update-btn">Update Choices</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -110,6 +142,8 @@
         const submitBtn = document.getElementById('submit-btn');
         const doneBtn = document.getElementById('done-btn');
         const resultDiv = document.getElementById('result');
+        const updateForm = document.getElementById('update-form');
+        const updateBtn = document.getElementById('update-btn');
 
         let scores = {};
 
@@ -160,6 +194,26 @@
             });
             toggleSubmitButton();
         }
+
+        updateBtn.addEventListener('click', () => {
+            const newOptions = [];
+            for (let i = 1; i <= 10; i++) {
+                const input = document.getElementById(`new-option-${i}`);
+                if (input.value.trim()) {
+                    newOptions.push(input.value.trim());
+                    input.value = '';
+                }
+            }
+            if (newOptions.length > 0) {
+                optionsList.innerHTML = '';
+                newOptions.forEach((option, index) => {
+                    const li = document.createElement('li');
+                    li.textContent = option;
+                    li.setAttribute('data-id', index + 1);
+                    optionsList.appendChild(li);
+                });
+            }
+        });
     </script>
 </body>
 </html>
