@@ -100,13 +100,7 @@
         <div class="list-container">
             <div class="list" id="available-list">
                 <h2>Available Options</h2>
-                <ul id="options">
-                    <li data-id="1">Pizza Place</li>
-                    <li data-id="2">Burger Joint</li>
-                    <li data-id="3">Sushi Bar</li>
-                    <li data-id="4">Taco Truck</li>
-                    <li data-id="5">Steakhouse</li>
-                </ul>
+                <ul id="options"></ul>
             </div>
             <div class="list" id="selection-list">
                 <h2>Your Choices</h2>
@@ -131,7 +125,7 @@
                 <input type="text" id="new-option-8" placeholder="New option 8"><br>
                 <input type="text" id="new-option-9" placeholder="New option 9"><br>
                 <input type="text" id="new-option-10" placeholder="New option 10"><br>
-                <button type="button" id="update-btn">Update Choices</button>
+                <button type="button" id="update-btn">Add Choices</button>
             </form>
         </div>
     </div>
@@ -145,7 +139,42 @@
         const updateForm = document.getElementById('update-form');
         const updateBtn = document.getElementById('update-btn');
 
-        let scores = {};
+        let scores = JSON.parse(localStorage.getItem('scores')) || {};
+        let customOptions = JSON.parse(localStorage.getItem('customOptions')) || [
+            "McDonald's", "Burger King", "Wendy's", "Chick-fil-A", "Whataburger",
+            "Subway", "Jimmy John's",
+            "Taco Bell", "Taco Mayo", "Taco Bueno", "Del Taco",
+            "Domino's", "Pizza Hut", "Papa John's", "Little Caesars",
+            "KFC", "Popeyes", "Raising Cane's", "Church's Chicken"
+        ];
+
+        function loadOptions() {
+            optionsList.innerHTML = '';
+            customOptions.forEach((option, index) => {
+                const li = document.createElement('li');
+                li.textContent = option;
+                li.setAttribute('data-id', index + 1);
+                li.appendChild(createRemoveButton(index));
+                optionsList.appendChild(li);
+            });
+        }
+
+        function createRemoveButton(index) {
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.style.marginLeft = '10px';
+            removeBtn.onclick = () => {
+                if (confirm('Removing this option will reset all scores. Proceed?')) {
+                    customOptions.splice(index, 1);
+                    scores = {};
+                    localStorage.setItem('customOptions', JSON.stringify(customOptions));
+                    localStorage.setItem('scores', JSON.stringify(scores));
+                    loadOptions();
+                    alert('Option removed and scores reset.');
+                }
+            };
+            return removeBtn;
+        }
 
         optionsList.addEventListener('click', (e) => {
             if (e.target.tagName === 'LI') {
@@ -173,10 +202,11 @@
                 const id = item.getAttribute('data-id');
                 scores[id] = (scores[id] || 0) + (5 - index);
             });
+            localStorage.setItem('scores', JSON.stringify(scores));
 
-            const proceed = confirm("Scores have been added. Would you like another person to choose or see the results?");
+            const choice = confirm("Scores have been added. Click 'OK' to add another person or 'Cancel' to see the results.");
 
-            if (proceed) {
+            if (choice) {
                 resetSelections();
             } else {
                 displayResults();
@@ -185,6 +215,7 @@
 
         resetBtn.addEventListener('click', () => {
             scores = {};
+            localStorage.setItem('scores', JSON.stringify(scores));
             alert('Scores have been reset.');
         });
 
@@ -198,8 +229,7 @@
         function displayResults() {
             const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
             const top3 = sortedScores.slice(0, 3).map(([id, score]) => {
-                return Array.from(optionsList.children).concat(Array.from(selectedList.children))
-                    .find(item => item.getAttribute('data-id') === id)?.textContent;
+                return `${customOptions[id - 1]} (${score} points)`;
             });
 
             resultDiv.innerHTML = `<h2>Top Choices</h2><p>1. ${top3[0]}</p><p>2. ${top3[1]}</p><p>3. ${top3[2]}</p>`;
@@ -216,15 +246,13 @@
                 }
             }
             if (newOptions.length > 0) {
-                optionsList.innerHTML = '';
-                newOptions.forEach((option, index) => {
-                    const li = document.createElement('li');
-                    li.textContent = option;
-                    li.setAttribute('data-id', index + 1);
-                    optionsList.appendChild(li);
-                });
+                customOptions.push(...newOptions);
+                localStorage.setItem('customOptions', JSON.stringify(customOptions));
+                loadOptions();
             }
         });
+
+        loadOptions();
     </script>
 </body>
 </html>
