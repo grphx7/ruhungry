@@ -108,8 +108,68 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <script>
+    const passcodeInput = document.getElementById('passcode-input');
+const savePasscodeBtn = document.getElementById('save-passcode-btn');
+const loadPasscodeBtn = document.getElementById('load-passcode-btn');
+
+// Mocked server-like storage for simplicity
+let savedConfigurations = {};
+
+function saveConfiguration(passcode) {
+    if (!passcode) {
+        alert("Please enter a valid passcode.");
+        return;
+    }
+
+    savedConfigurations[passcode] = {
+        customOptions: [...customOptions],
+        scores: { ...scores }
+    };
+
+    alert("Configuration saved successfully!");
+}
+
+function loadConfiguration(passcode) {
+    if (!passcode || !savedConfigurations[passcode]) {
+        alert("Invalid or non-existing passcode.");
+        return;
+    }
+
+    const { customOptions: loadedOptions, scores: loadedScores } = savedConfigurations[passcode];
+    customOptions = [...loadedOptions];
+    scores = { ...loadedScores };
+
+    localStorage.setItem('customOptions', JSON.stringify(customOptions));
+    localStorage.setItem('scores', JSON.stringify(scores));
+    loadOptions();
+
+    alert("Configuration loaded successfully!");
+}
+
+savePasscodeBtn.addEventListener('click', () => {
+    const passcode = prompt("Enter a passcode to save your configuration:");
+    saveConfiguration(passcode);
+});
+
+loadPasscodeBtn.addEventListener('click', () => {
+    const passcode = passcodeInput.value.trim();
+    loadConfiguration(passcode);
+});
+    </script>
+       <div class="container">
         <h1>Choose Where to Eat</h1>
+           <div class="passcode-section">
+    <h2>Save or Load Configuration</h2>
+    <div>
+        <input type="text" id="passcode-input" placeholder="Enter passcode" />
+        <button id="load-passcode-btn">Load</button>
+    </div>
+    <div>
+        <button id="save-passcode-btn">Save Configuration</button>
+    </div>
+</div>
+
         <div class="list-container">
             <div class="list" id="available-list">
                 <h2>Available Options</h2>
