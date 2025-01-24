@@ -61,12 +61,22 @@
         }
 
         .column li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px;
             background: #fff;
             margin: 5px 0;
             border-radius: 5px;
-            cursor: grab;
+            cursor: pointer;
             text-align: center;
+        }
+
+        .column li .remove {
+            color: red;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 10px;
         }
 
         .button {
@@ -121,7 +131,7 @@
             "Del Taco", "Domino's", "Pizza Hut", "Papa John's", "Little Caesars", 
             "KFC", "Popeyes", "Raising Cane's", "Church's Chicken"
         ];
-        
+
         const availableList = document.getElementById('available-list');
         const choiceList = document.getElementById('choice-list');
         const submitButton = document.getElementById('submit-button');
@@ -137,34 +147,33 @@
             options.forEach(option => {
                 const li = document.createElement('li');
                 li.textContent = option;
-                li.draggable = true;
-                li.addEventListener('dragstart', dragStart);
+
+                const removeButton = document.createElement('span');
+                removeButton.textContent = 'X';
+                removeButton.classList.add('remove');
+                removeButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    options = options.filter(o => o !== option);
+                    renderLists();
+                });
+
+                li.appendChild(removeButton);
+
+                li.addEventListener('click', () => {
+                    if (!Array.from(choiceList.children).some(child => child.textContent === option)) {
+                        const choiceLi = document.createElement('li');
+                        choiceLi.textContent = option;
+                        choiceLi.addEventListener('click', () => choiceLi.remove());
+                        choiceList.appendChild(choiceLi);
+                        updateSubmitButton();
+                    }
+                });
+
                 availableList.appendChild(li);
             });
 
             choiceList.innerHTML = '';
         }
-
-        function dragStart(event) {
-            event.dataTransfer.setData('text', event.target.textContent);
-        }
-
-        choiceList.addEventListener('dragover', event => {
-            event.preventDefault();
-        });
-
-        choiceList.addEventListener('drop', event => {
-            event.preventDefault();
-            const option = event.dataTransfer.getData('text');
-
-            if (!Array.from(choiceList.children).some(li => li.textContent === option)) {
-                const li = document.createElement('li');
-                li.textContent = option;
-                li.addEventListener('click', () => li.remove());
-                choiceList.appendChild(li);
-            }
-            updateSubmitButton();
-        });
 
         function updateSubmitButton() {
             submitButton.disabled = choiceList.children.length < 5;
