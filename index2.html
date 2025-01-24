@@ -158,7 +158,7 @@
         }
 
         async function fetchConfig(passcode) {
-            const response = await fetch(`/get-config?passcode=${passcode}`);
+            const response = await fetch(`/saves/${passcode}.json`);
             if (response.ok) {
                 return await response.json();
             } else {
@@ -167,8 +167,8 @@
         }
 
         async function saveConfig(passcode, config) {
-            await fetch(`/save-config?passcode=${passcode}`, {
-                method: 'POST',
+            await fetch(`/saves/${passcode}.json`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(config),
             });
@@ -189,15 +189,16 @@
             }
 
             if (getCookie("voted")) {
-                alert("You have already voted. You cannot vote again.");
+                alert("You have already voted. Displaying results.");
                 submitButton.disabled = true;
-                renderLists(false);
-            } else {
-                renderLists(true);
+                displayResults();
+                return;
             }
+
+            renderLists();
         }
 
-        function renderLists(allowInteraction) {
+        function renderLists() {
             availableList.innerHTML = '';
             options.forEach(option => {
                 const li = document.createElement('li');
@@ -209,24 +210,22 @@
                 removeButton.addEventListener('click', (event) => {
                     event.stopPropagation();
                     options = options.filter(o => o !== option);
-                    renderLists(allowInteraction);
+                    renderLists();
                 });
 
                 li.appendChild(removeButton);
 
-                if (allowInteraction) {
-                    li.addEventListener('click', () => {
-                        if (!Array.from(choiceList.children).some(child => child.textContent === option)) {
-                            const choiceLi = document.createElement('li');
-                            choiceLi.textContent = option;
-                            choiceLi.addEventListener('click', () => choiceLi.remove());
-                            choiceList.appendChild(choiceLi);
-                            options = options.filter(o => o !== option);
-                            renderLists(allowInteraction);
-                            updateSubmitButton();
-                        }
-                    });
-                }
+                li.addEventListener('click', () => {
+                    if (!Array.from(choiceList.children).some(child => child.textContent === option)) {
+                        const choiceLi = document.createElement('li');
+                        choiceLi.textContent = option;
+                        choiceLi.addEventListener('click', () => choiceLi.remove());
+                        choiceList.appendChild(choiceLi);
+                        options = options.filter(o => o !== option);
+                        renderLists();
+                        updateSubmitButton();
+                    }
+                });
 
                 availableList.appendChild(li);
             });
@@ -251,6 +250,10 @@
                 await saveConfig(passcode, { options, votes });
             }
 
+            displayResults();
+        });
+
+        function displayResults() {
             const sortedVotes = Object.entries(votes).sort((a, b) => b[1] - a[1]);
             resultsList.innerHTML = '';
             sortedVotes.slice(0, 3).forEach(([name, score]) => {
@@ -259,7 +262,7 @@
                 resultsList.appendChild(li);
             });
             resultsContainer.style.display = 'block';
-        });
+        }
 
         resetAllButton.addEventListener('click', async () => {
             options = [...defaultOptions];
@@ -268,7 +271,7 @@
             if (passcode) {
                 await saveConfig(passcode, { options: defaultOptions, votes: {} });
             }
-            renderLists(true);
+            renderLists();
             resultsContainer.style.display = 'none';
         });
 
