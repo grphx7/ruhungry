@@ -1,207 +1,152 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Voting</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-color: #f4f4f4;
-        }
+Sora icon
+GPT Icon
+GPT Icon
 
-        h1 {
-            margin-bottom: 20px;
-        }
+You said:
+I want a fully functional website that lets users vote on where to eat and provides the following features:
 
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+    User Interaction:
+        A list of food options (default options should include: McDonald's, Burger King, Wendy's, Chick-fil-A, Whataburger, Subway, Jimmy John's, Taco Bell, Taco Mayo, Taco Bueno, Del Taco, Domino's, Pizza Hut, Papa John's, Little Caesars, KFC, Popeyes, Raising Cane's, Church's Chicken).
+        Users can drag food options from an 'Available Options' column to a 'Your Choices' column.
+        Users must add at least 5 food options to the 'Your Choices' column before they can submit their votes.
 
-        .columns {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
+    Voting and Scoring:
+        When a user submits their choices, assign scores based on their order (e.g., first choice gets 5 points, second gets 4 points, etc.).
+        The page should ask if another user wants to vote or if they want to see the results.
+        If they choose to vote again, reset the selections and let another user choose.
+        If they choose to see the results, display the top 3 choices along with their scores.
 
-        .column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #e8e8e8;
-            border-radius: 8px;
-            padding: 10px;
-        }
+    Customization:
+        Allow users to add new food options via input fields. Newly added options should be appended to the list, not replace the existing options.
+        Allow users to remove options from the list, but doing so should reset all scores.
 
-        .column h3 {
-            text-align: center;
-        }
+    Passcode Feature:
+        Users can save their current list of food options and scores to a passcode.
+        Another user can enter the passcode to load the saved configuration, including both the food options and their scores.
+        Ensure configurations are saved on the webserver and not the user's device for simplicity.
 
-        .column ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+    Reset Options:
+        Include a 'RESET ALL' button that resets the food options and scores to the default state.
 
-        .column li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: #fff;
-            margin: 5px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-        }
+    Responsive Design:
+        Ensure the website is styled with a minimalist, modern design using CSS.
+        The layout should be single-column, centered with appropriate spacing and padding.
+        Make it responsive and user-friendly for both desktop and mobile devices.
 
-        .column li .remove {
-            color: red;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 10px;
-        }
+Please provide the full HTML, CSS, and JavaScript code in a single response."
+ChatGPT said:
+ChatGPT
 
-        .button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+Here is the complete HTML, CSS, and JavaScript code for your voting website. The code includes all the requested features, ensuring functionality and responsiveness.
 
-        .button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
+This code creates a fully functional food voting website with drag-and-drop functionality, voting, and score tracking, along with customizable options. You can copy this and open it in a browser to see it in action. Let me know if you need help with deployment or further enhancements!
+You said:
+Change the code to where the user can click on the name of the location instead of dragging it.  Also include a small "X" next to each option to remove it from the list
+ChatGPT said:
+ChatGPT
 
-        .results {
-            margin-top: 20px;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <h1>Food Voting</h1>
-    <div class="container">
-        <div class="columns">
-            <div class="column" id="available-options">
-                <h3>Available Options</h3>
-                <ul id="available-list">
-                    <!-- Default options -->
-                </ul>
-            </div>
-            <div class="column" id="your-choices">
-                <h3>Your Choices</h3>
-                <ul id="choice-list">
-                    <!-- User-selected options -->
-                </ul>
-            </div>
-        </div>
-        <button class="button" id="submit-button" disabled>Submit Vote</button>
-        <button class="button" id="reset-all">Reset All</button>
-        <div class="results" id="results-container" style="display: none;">
-            <h3>Top 3 Choices</h3>
-            <ul id="results-list"></ul>
-        </div>
-    </div>
-    <script>
-        const defaultOptions = [
-            "McDonald's", "Burger King", "Wendy's", "Chick-fil-A", "Whataburger", 
-            "Subway", "Jimmy John's", "Taco Bell", "Taco Mayo", "Taco Bueno", 
-            "Del Taco", "Domino's", "Pizza Hut", "Papa John's", "Little Caesars", 
-            "KFC", "Popeyes", "Raising Cane's", "Church's Chicken"
-        ];
+The code has been updated to allow users to click on a location to add it to their choices, and an "X" button has been added next to each option for easy removal from the available list. Let me know if you need any further adjustments!
+You said:
+When the page first loads, prompt the user for a passcode.  Then search the web server for a config file with that passcode.  If no passcode is found, create a new config file with the default food choices and no score saved.  If a config file is found, load the rest of the page with the appropriate food choices and saved score.
+Also when a food choice is picked, make the option to pick it on the left side disappear.
+ChatGPT said:
+ChatGPT
 
-        const availableList = document.getElementById('available-list');
-        const choiceList = document.getElementById('choice-list');
-        const submitButton = document.getElementById('submit-button');
-        const resetAllButton = document.getElementById('reset-all');
-        const resultsContainer = document.getElementById('results-container');
-        const resultsList = document.getElementById('results-list');
+The code has been updated to prompt the user for a passcode on page load, fetch or create a configuration file from the server, and ensure that chosen food options disappear from the available list. Let me know if further adjustments are needed!
+You said:
+Make the following changes:
+* When the page is loaded, popup an alert stating if a config file was found or if a new config was created.
+* Use cookies to tell if the user has already voted.  If they have already voted, don't allow them to vote again.
 
-        let options = [...defaultOptions];
-        let votes = {};
+There is also a bug.  When you click on the food choice, it doesn't get added to the list of "Your choices"  and it disappears from the left column.  
+ChatGPT said:
+ChatGPT
 
-        async function fetchConfig(passcode) {
-            const response = await fetch(`/get-config?passcode=${passcode}`);
-            if (response.ok) {
-                return await response.json();
-            } else {
-                return null;
-            }
-        }
+The code has been updated to address the following:
 
-        async function saveConfig(passcode, config) {
-            await fetch(`/save-config?passcode=${passcode}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config),
-            });
-        }
+    Config Alert: An alert now displays whether a configuration file was found or a new one was created upon page load.
+    Vote Restriction: Cookies are used to check if the user has already voted. If they have, voting is disabled for them.
+    Bug Fix: Clicking a food choice now properly adds it to the "Your Choices" l
 
-        async function initialize() {
-            const passcode = prompt("Enter your passcode:");
-            if (!passcode) return;
 
-            const config = await fetchConfig(passcode);
-            if (config) {
-                options = config.options;
-                votes = config.votes;
-            } else {
-                await saveConfig(passcode, { options: defaultOptions, votes: {} });
-            }
+ChatGPT can make mistakes. Check important info.
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
 
-            renderLists();
-        }
-
-        function renderLists() {
-            availableList.innerHTML = '';
-            options.forEach(option => {
-                const li = document.createElement('li');
-                li.textContent = option;
-
-                const removeButton = document.createElement('span');
-                removeButton.textContent = 'X';
-                removeButton.classList.add('remove');
-                removeButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    options = options.filter(o => o !== option);
-                    renderLists();
-                });
-
-                li.appendChild(removeButton);
-
-                li.addEventListener('click', () => {
-                    if (!Array.from(choiceList.children).some(child => child.textContent === option)) {
-                        const choiceLi = document.createElement('li');
-                        choiceLi.textContent = option;
-                        choiceLi.addEventListener('click', () => choiceLi.remove());
-                        choiceList.appendChild(choiceLi);
-                        options = options.filter(o => o !== option);
-                        renderLists();
-                        updateSubmitButton();
-                    }
-                });
+                if (allowInteraction) {
+                    li.addEventListener('click', () => {
+                        if (!Array.from(choiceList.children).some(child => child.textContent === option)) {
+                            const choiceLi = document.createElement('li');
+                            choiceLi.textContent = option;
+                            choiceLi.addEventListener('click', () => choiceLi.remove());
+                            choiceList.appendChild(choiceLi);
+                            options = options.filter(o => o !== option);
+                            renderLists(allowInteraction);
+                            updateSubmitButton();
+                        }
+                    });
+                }
 
                 availableList.appendChild(li);
             });
@@ -218,6 +163,8 @@
                 const score = choiceList.children.length - index;
                 votes[li.textContent] = (votes[li.textContent] || 0) + score;
             });
+
+            setCookie("voted", "true", 7);
 
             const passcode = prompt("Re-enter your passcode to save:");
             if (passcode) {
@@ -241,7 +188,7 @@
             if (passcode) {
                 await saveConfig(passcode, { options: defaultOptions, votes: {} });
             }
-            renderLists();
+            renderLists(true);
             resultsContainer.style.display = 'none';
         });
 
