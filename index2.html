@@ -142,6 +142,38 @@
         let options = [...defaultOptions];
         let votes = {};
 
+        async function fetchConfig(passcode) {
+            const response = await fetch(`/get-config?passcode=${passcode}`);
+            if (response.ok) {
+                return await response.json();
+            } else {
+                return null;
+            }
+        }
+
+        async function saveConfig(passcode, config) {
+            await fetch(`/save-config?passcode=${passcode}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config),
+            });
+        }
+
+        async function initialize() {
+            const passcode = prompt("Enter your passcode:");
+            if (!passcode) return;
+
+            const config = await fetchConfig(passcode);
+            if (config) {
+                options = config.options;
+                votes = config.votes;
+            } else {
+                await saveConfig(passcode, { options: defaultOptions, votes: {} });
+            }
+
+            renderLists();
+        }
+
         function renderLists() {
             availableList.innerHTML = '';
             options.forEach(option => {
@@ -165,6 +197,8 @@
                         choiceLi.textContent = option;
                         choiceLi.addEventListener('click', () => choiceLi.remove());
                         choiceList.appendChild(choiceLi);
+                        options = options.filter(o => o !== option);
+                        renderLists();
                         updateSubmitButton();
                     }
                 });
@@ -179,11 +213,16 @@
             submitButton.disabled = choiceList.children.length < 5;
         }
 
-        submitButton.addEventListener('click', () => {
+        submitButton.addEventListener('click', async () => {
             Array.from(choiceList.children).forEach((li, index) => {
                 const score = choiceList.children.length - index;
                 votes[li.textContent] = (votes[li.textContent] || 0) + score;
             });
+
+            const passcode = prompt("Re-enter your passcode to save:");
+            if (passcode) {
+                await saveConfig(passcode, { options, votes });
+            }
 
             const sortedVotes = Object.entries(votes).sort((a, b) => b[1] - a[1]);
             resultsList.innerHTML = '';
@@ -195,14 +234,18 @@
             resultsContainer.style.display = 'block';
         });
 
-        resetAllButton.addEventListener('click', () => {
+        resetAllButton.addEventListener('click', async () => {
             options = [...defaultOptions];
             votes = {};
+            const passcode = prompt("Re-enter your passcode to reset:");
+            if (passcode) {
+                await saveConfig(passcode, { options: defaultOptions, votes: {} });
+            }
             renderLists();
             resultsContainer.style.display = 'none';
         });
 
-        renderLists();
+        initialize();
     </script>
 </body>
 </html>
