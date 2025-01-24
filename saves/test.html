@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create File</title>
+</head>
+<body>
+    <h1>File Creator</h1>
+    <form id="fileForm">
+        <label for="fileName">Enter a name for the file:</label>
+        <input type="text" id="fileName" name="fileName" required>
+        <button type="submit">Create File</button>
+    </form>
+
+    <script>
+        document.getElementById('fileForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const fileName = document.getElementById('fileName').value;
+
+            if (!fileName) {
+                alert('Please enter a valid name.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/create-file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fileName })
+                });
+
+                if (response.ok) {
+                    alert(`File named "${fileName}" was successfully created.`);
+                } else {
+                    alert('Failed to create file.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while creating the file.');
+            }
+        });
+    </script>
+</body>
+</html>
