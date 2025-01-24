@@ -1,233 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Food Voting App</title>
-<style>
-body {
-  background-color: #222;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
-.container {
-  background-color: #eee;
-  border: 1px solid #ccc;
-  padding: 20px;
-  border-radius: 5px;
-  text-align: center;
-}
-
-.passcode {
-  margin-bottom: 10px;
-}
-
-.option {
-  margin-bottom: 5px;
-  cursor: pointer;
-}
-
-.custom-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.remove-button {
-  color: red;
-  cursor: pointer;
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Voting</title>
+    <style>
+        body {
+            background-color: #333;
+            color: #000;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+        }
+        button {
+            margin: 5px 0;
+        }
+        .food-list {
+            list-style: none;
+            padding: 0;
+        }
+        .food-list li {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .custom-food {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        .custom-food input {
+            flex-grow: 1;
+            margin-right: 5px;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h3 id="passcode-display">Passcode:</h3>
+        <ul id="food-list" class="food-list"></ul>
+        <div class="custom-food">
+            <input type="text" id="custom-food-input" placeholder="Add custom food">
+            <button id="add-custom-food">Add</button>
+        </div>
+        <button id="submit-button">Submit</button>
+        <p id="message"></p>
+    </div>
 
-<div class="container">
-  <div class="passcode">
-    Passcode: <span id="current-passcode"></span>
-  </div>
+    <script>
+        const defaultFoods = ["Mcdonalds", "Taco Bell", "Sonic", "Pizza Hut", "Subway"];
+        let foodPoints = {};
+        let userChoices = [];
+        let passcode;
 
-  <div id="options-container"></div>
+        document.addEventListener("DOMContentLoaded", () => {
+            passcode = prompt("Enter passcode:") || generateRandomPasscode();
+            loadPasscodeData(passcode);
+        });
 
-  <div>
-    <input type="text" id="custom-option-input" placeholder="Enter custom option">
-    <button id="add-custom-option">Add</button>
-  </div>
-
-  <button id="submit-button">Submit</button>
-</div>
-
-<script>
-  const passcodeRegex = /^[a-zA-Z0-9]{5}$/; // Allow alphanumeric characters only
-  const defaultOptions = [
-    { name: "Mcdonalds", points: 0 },
-    { name: "Taco Bell", points: 0 },
-    { name: "Sonic", points: 0 },
-    { name: "Pizza Hut", points: 0 },
-    { name: "Subway", points: 0 }
-  ];
-  let currentPasscode;
-  let userChoices = []; 
-
-  // Function to generate a random 5-character passcode
-  function generateRandomPasscode() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let passcode = '';
-    for (let i = 0; i < 5; i++) {
-      passcode += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return passcode;
-  }
-
-  // Function to load options from file or use defaults
-  async function loadOptions() {
-    if (currentPasscode) {
-      try {
-        const response = await fetch(`saves/${currentPasscode}.txt`);
-        const data = await response.text();
-        const lines = data.split('\n');
-        const options = [];
-        for (const line of lines) {
-          const [name, points] = line.split(':');
-          options.push({ name, points: parseInt(points) });
+        function generateRandomPasscode() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return Array.from({ length: 5 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
         }
-        displayOptions(options);
-      } catch (error) {
-        console.error("Error loading options:", error);
-        displayOptions(defaultOptions);
-      }
-    } else {
-      displayOptions(defaultOptions);
-    }
-  }
 
-  // Function to display options on the page
-  function displayOptions(options) {
-    const optionsContainer = document.getElementById('options-container');
-    optionsContainer.innerHTML = ''; 
+        function loadPasscodeData(passcode) {
+            // Mock implementation of loading data. In production, replace this with an API call or file fetch.
+            document.getElementById("passcode-display").innerText = `Passcode: ${passcode}`;
+            const existingData = localStorage.getItem(passcode);
 
-    options.forEach((option, index) => {
-      const optionElement = document.createElement('div');
-      optionElement.classList.add('option');
-      optionElement.textContent = `${option.name} (${option.points})`;
-      optionElement.addEventListener('click', () => {
-        handleOptionClick(option, index);
-      });
-      optionsContainer.appendChild(optionElement);
-    });
-  }
+            if (existingData) {
+                foodPoints = JSON.parse(existingData);
+                displayResults();
+            } else {
+                defaultFoods.forEach(food => foodPoints[food] = 0);
+                renderVotingUI();
+            }
+        }
 
-  // Function to handle option clicks
-  function handleOptionClick(option, index) {
-    const optionElements = document.querySelectorAll('.option');
+        function renderVotingUI() {
+            const foodList = document.getElementById("food-list");
+            foodList.innerHTML = "";
 
-    if (userChoices.includes(index)) { 
-      // Remove vote
-      userChoices = userChoices.filter(i => i !== index);
-      optionElements[index].textContent = `${option.name} (${option.points})`; 
-      return;
-    }
+            Object.keys(foodPoints).forEach(food => {
+                const li = document.createElement("li");
+                li.innerHTML = `${food} <span></span>`;
+                li.addEventListener("click", () => handleFoodSelection(li, food));
+                foodList.appendChild(li);
+            });
+        }
 
-    if (userChoices.length < 3) { 
-      // Add vote
-      userChoices.push(index);
-      optionElements[index].textContent = `${option.name} (${option.points}) ${userChoices.length}`; 
-    } else { 
-      // Replace last vote
-      userChoices[2] = index;
-      optionElements[userChoices[0]].textContent = `${options[userChoices[0]].name} (${options[userChoices[0]].points}) 1`;
-      optionElements[userChoices[1]].textContent = `${options[userChoices[1]].name} (${options[userChoices[1]].points}) 2`;
-      optionElements[index].textContent = `${option.name} (${option.points}) 3`;
-    }
-  }
+        function handleFoodSelection(li, food) {
+            const index = userChoices.indexOf(food);
 
-  // Function to add custom option
-  function addCustomOption() {
-    const input = document.getElementById('custom-option-input');
-    const customOption = input.value.trim();
+            if (index !== -1) {
+                userChoices.splice(index, 1);
+                li.querySelector("span").innerText = "";
+            } else if (userChoices.length < 3) {
+                userChoices.push(food);
+                li.querySelector("span").innerText = userChoices.length;
+            }
+        }
 
-    if (customOption) {
-      const newOptions = [...defaultOptions, { name: customOption, points: 0 }]; 
-      displayOptions(newOptions);
-      input.value = '';
-    }
-  }
+        document.getElementById("add-custom-food").addEventListener("click", () => {
+            const input = document.getElementById("custom-food-input");
+            const newFood = input.value.trim();
 
-  // Function to remove custom option
-  function removeCustomOption(index) {
-    const options = [...defaultOptions]; 
-    options.splice(index - defaultOptions.length, 1); 
-    displayOptions(options);
-  }
+            if (newFood && !foodPoints[newFood]) {
+                foodPoints[newFood] = 0;
+                input.value = "";
+                renderVotingUI();
+            }
+        });
 
-  // Function to submit votes and save to file
-  async function submitVotes() {
-    const options = [...defaultOptions]; 
-    const customOptionInput = document.getElementById('custom-option-input');
-    const customOption = customOptionInput.value.trim();
-    if (customOption) {
-      options.push({ name: customOption, points: 0 }); 
-    }
+        document.getElementById("submit-button").addEventListener("click", () => {
+            if (userChoices.length < 3) {
+                alert("Please select exactly 3 choices.");
+                return;
+            }
 
-    options[userChoices[0]].points += 4;
-    options[userChoices[1]].points += 2;
-    options[userChoices[2]].points += 1;
+            foodPoints[userChoices[0]] += 4;
+            foodPoints[userChoices[1]] += 2;
+            foodPoints[userChoices[2]] += 1;
 
-    try {
-      const file = new File([options.map(option => `${option.name}:${option.points}`).join('\n')], `${currentPasscode}.txt`, { type: 'text/plain' });
-      await fetch(`saves/${currentPasscode}.txt`, {
-        method: 'PUT',
-        body: file
-      });
-      alert('Votes submitted successfully!');
-    } catch (error) {
-      console.error("Error saving votes:", error);
-      alert('Error saving votes. Please try again.');
-    }
-  }
+            localStorage.setItem(passcode, JSON.stringify(foodPoints));
+            displayResults();
+        });
 
-  // Initialize
-  const passcodeInput = document.getElementById('passcode-input');
-  const submitButton = document.getElementById('submit-button');
-  const addCustomOptionButton = document.getElementById('add-custom-option');
+        function displayResults() {
+            const foodList = document.getElementById("food-list");
+            foodList.innerHTML = "";
 
-  // Handle passcode input
-  // passcodeInput.addEventListener('input', () => {
-  //   const enteredPasscode = passcodeInput.value;
-  //   if (passcodeRegex.test(enteredPasscode)) {
-  //     currentPasscode = enteredPasscode;
-  //     loadOptions();
-  //   } else {
-  //     currentPasscode = null;
-  //     // Display error message or clear options
-  //   }
-  // });
+            Object.entries(foodPoints).sort((a, b) => b[1] - a[1]).forEach(([food, points]) => {
+                const li = document.createElement("li");
+                li.textContent = `${food}: ${points} points`;
+                foodList.appendChild(li);
+            });
 
-  // Generate and use initial passcode
-  do {
-    currentPasscode = generateRandomPasscode();
-  } while (await fileExists(`saves/${currentPasscode}.txt`));
-
-  document.getElementById('current-passcode').textContent = currentPasscode; 
-  loadOptions();
-
-  // Handle custom option input
-  addCustomOptionButton.addEventListener('click', addCustomOption);
-
-  // Handle submit button click
-  submitButton.addEventListener('click', submitVotes);
-
-  // Helper function to check if file exists
-  async function fileExists(filePath) {
-    try {
-      const response = await fetch(filePath);
-      return response.ok;
-    } catch (error) {
-      return false;
-    }
-  }
-</script>
-
+            document.getElementById("message").innerText = "You have already voted.";
+            document.getElementById("submit-button").style.display = "none";
+            document.querySelector(".custom-food").style.display = "none";
+        }
+    </script>
 </body>
 </html>
