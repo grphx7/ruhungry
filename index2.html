@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Voting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .columns {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #e8e8e8;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .column h3 {
+            text-align: center;
+        }
+
+        .column ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .column li {
+            padding: 10px;
+            background: #fff;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: grab;
+            text-align: center;
+        }
+
+        .button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .results {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Food Voting</h1>
+    <div class="container">
+        <div class="columns">
+            <div class="column" id="available-options">
+                <h3>Available Options</h3>
+                <ul id="available-list">
+                    <!-- Default options -->
+                </ul>
+            </div>
+            <div class="column" id="your-choices">
+                <h3>Your Choices</h3>
+                <ul id="choice-list">
+                    <!-- User-selected options -->
+                </ul>
+            </div>
+        </div>
+        <button class="button" id="submit-button" disabled>Submit Vote</button>
+        <button class="button" id="reset-all">Reset All</button>
+        <div class="results" id="results-container" style="display: none;">
+            <h3>Top 3 Choices</h3>
+            <ul id="results-list"></ul>
+        </div>
+    </div>
+    <script>
+        const defaultOptions = [
+            "McDonald's", "Burger King", "Wendy's", "Chick-fil-A", "Whataburger", 
+            "Subway", "Jimmy John's", "Taco Bell", "Taco Mayo", "Taco Bueno", 
+            "Del Taco", "Domino's", "Pizza Hut", "Papa John's", "Little Caesars", 
+            "KFC", "Popeyes", "Raising Cane's", "Church's Chicken"
+        ];
+        
+        const availableList = document.getElementById('available-list');
+        const choiceList = document.getElementById('choice-list');
+        const submitButton = document.getElementById('submit-button');
+        const resetAllButton = document.getElementById('reset-all');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsList = document.getElementById('results-list');
+
+        let options = [...defaultOptions];
+        let votes = {};
+
+        function renderLists() {
+            availableList.innerHTML = '';
+            options.forEach(option => {
+                const li = document.createElement('li');
+                li.textContent = option;
+                li.draggable = true;
+                li.addEventListener('dragstart', dragStart);
+                availableList.appendChild(li);
+            });
+
+            choiceList.innerHTML = '';
+        }
+
+        function dragStart(event) {
+            event.dataTransfer.setData('text', event.target.textContent);
+        }
+
+        choiceList.addEventListener('dragover', event => {
+            event.preventDefault();
+        });
+
+        choiceList.addEventListener('drop', event => {
+            event.preventDefault();
+            const option = event.dataTransfer.getData('text');
+
+            if (!Array.from(choiceList.children).some(li => li.textContent === option)) {
+                const li = document.createElement('li');
+                li.textContent = option;
+                li.addEventListener('click', () => li.remove());
+                choiceList.appendChild(li);
+            }
+            updateSubmitButton();
+        });
+
+        function updateSubmitButton() {
+            submitButton.disabled = choiceList.children.length < 5;
+        }
+
+        submitButton.addEventListener('click', () => {
+            Array.from(choiceList.children).forEach((li, index) => {
+                const score = choiceList.children.length - index;
+                votes[li.textContent] = (votes[li.textContent] || 0) + score;
+            });
+
+            const sortedVotes = Object.entries(votes).sort((a, b) => b[1] - a[1]);
+            resultsList.innerHTML = '';
+            sortedVotes.slice(0, 3).forEach(([name, score]) => {
+                const li = document.createElement('li');
+                li.textContent = `${name}: ${score} points`;
+                resultsList.appendChild(li);
+            });
+            resultsContainer.style.display = 'block';
+        });
+
+        resetAllButton.addEventListener('click', () => {
+            options = [...defaultOptions];
+            votes = {};
+            renderLists();
+            resultsContainer.style.display = 'none';
+        });
+
+        renderLists();
+    </script>
+</body>
+</html>
