@@ -3,279 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Voting</title>
+    <title>Food Choice Selector</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            background-color: #333;
+            color: #000;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background-color: #f4f4f4;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            width: 100%;
-            max-width: 600px;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: #ccc;
             padding: 20px;
-            background: #fff;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .columns {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        .column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #e8e8e8;
-            border-radius: 8px;
-            padding: 10px;
-        }
-
-        .column h3 {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            width: 300px;
             text-align: center;
         }
-
-        .column ul {
+        .food-list {
             list-style: none;
             padding: 0;
-            margin: 0;
         }
-
-        .column li {
+        .food-list li {
+            margin: 10px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            background: #fff;
-            margin: 5px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
         }
-
-        .column li .remove {
-            color: red;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            background-color: #007bff;
-            color: white;
+        button {
+            background-color: #444;
+            color: #fff;
             border: none;
+            padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
         }
-
-        .button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+        button:hover {
+            background-color: #555;
         }
-
-        .results {
-            margin-top: 20px;
-            text-align: center;
+        .error {
+            color: red;
         }
     </style>
-</head>
-<body>
-    <h1>Food Voting</h1>
-    <div class="container">
-        <div class="columns">
-            <div class="column" id="available-options">
-                <h3>Available Options</h3>
-                <ul id="available-list">
-                    <!-- Default options -->
-                </ul>
-            </div>
-            <div class="column" id="your-choices">
-                <h3>Your Choices</h3>
-                <ul id="choice-list">
-                    <!-- User-selected options -->
-                </ul>
-            </div>
-        </div>
-        <button class="button" id="submit-button" disabled>Submit Vote</button>
-        <button class="button" id="reset-all">Reset All</button>
-        <div class="results" id="results-container" style="display: none;">
-            <h3>Top 3 Choices</h3>
-            <ul id="results-list"></ul>
-        </div>
-    </div>
     <script>
-        const defaultOptions = [
-            "McDonald's", "Burger King", "Wendy's", "Chick-fil-A", "Whataburger", 
-            "Subway", "Jimmy John's", "Taco Bell", "Taco Mayo", "Taco Bueno", 
-            "Del Taco", "Domino's", "Pizza Hut", "Papa John's", "Little Caesars", 
-            "KFC", "Popeyes", "Raising Cane's", "Church's Chicken"
+        let foodOptions = [
+            { name: "Mcdonalds", points: 10 },
+            { name: "Taco Bell", points: 8 },
+            { name: "Sonic", points: 6 },
+            { name: "Pizza Hut", points: 4 },
+            { name: "Subway", points: 2 }
         ];
 
-        const availableList = document.getElementById('available-list');
-        const choiceList = document.getElementById('choice-list');
-        const submitButton = document.getElementById('submit-button');
-        const resetAllButton = document.getElementById('reset-all');
-        const resultsContainer = document.getElementById('results-container');
-        const resultsList = document.getElementById('results-list');
+        let selectedChoices = [];
 
-        let options = [...defaultOptions];
-        let votes = {};
-
-        function setCookie(name, value, days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
-        }
-
-        function getCookie(name) {
-            const cookies = document.cookie.split('; ');
-            for (const cookie of cookies) {
-                const [key, value] = cookie.split('=');
-                if (key === name) return value;
-            }
-            return null;
-        }
-
-        async function fetchConfig(passcode) {
-            const response = await fetch(`/saves/${passcode}.json`);
-            if (response.ok) {
-                return await response.json();
-            } else {
-                return null;
-            }
-        }
-
-        async function saveConfig(passcode, config) {
-            await fetch(`/saves/${passcode}.json`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config),
+        function renderFoodOptions() {
+            const list = document.getElementById("food-list");
+            list.innerHTML = "";
+            foodOptions.forEach((option, index) => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span>${option.name}</span>
+                    <span>
+                        <button onclick="selectChoice(${index})">Select</button>
+                        ${!option.custom ? `<button onclick="removeOption(${index})">X</button>` : ""}
+                    </span>
+                `;
+                list.appendChild(li);
             });
         }
 
-        async function initialize() {
-            const passcode = prompt("Enter your passcode:");
-            if (!passcode) return;
-
-            const config = await fetchConfig(passcode);
-            if (config) {
-                alert("Configuration file found. Loading saved data.");
-                options = config.options;
-                votes = config.votes;
-            } else {
-                alert("No configuration file found. Creating a new configuration.");
-                await saveConfig(passcode, { options: defaultOptions, votes: {} });
+        function selectChoice(index) {
+            if (selectedChoices.includes(index)) {
+                selectedChoices = selectedChoices.filter(i => i !== index);
+            } else if (selectedChoices.length < 3) {
+                selectedChoices.push(index);
             }
-
-            if (getCookie("voted")) {
-                alert("You have already voted. Displaying results.");
-                submitButton.disabled = true;
-                displayResults();
-                return;
-            }
-
-            renderLists();
+            updateSelectionNumbers();
         }
 
-        function renderLists() {
-            availableList.innerHTML = '';
-            options.forEach(option => {
-                const li = document.createElement('li');
-                li.textContent = option;
+        function updateSelectionNumbers() {
+            const listItems = document.querySelectorAll(".food-list li");
+            listItems.forEach((li, index) => {
+                const number = selectedChoices.indexOf(index) + 1;
+                li.querySelector("span").innerText = number ? `${foodOptions[index].name} (${number})` : foodOptions[index].name;
+            });
+        }
 
-                const removeButton = document.createElement('span');
-                removeButton.textContent = 'X';
-                removeButton.classList.add('remove');
-                removeButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    options = options.filter(o => o !== option);
-                    renderLists();
-                });
+        function removeOption(index) {
+            foodOptions.splice(index, 1);
+            selectedChoices = selectedChoices.filter(i => i !== index);
+            renderFoodOptions();
+            updateSelectionNumbers();
+        }
 
-                li.appendChild(removeButton);
+        function addCustomOption() {
+            const customInput = document.getElementById("custom-input");
+            const customName = customInput.value.trim();
+            if (customName) {
+                foodOptions.push({ name: customName, points: 0, custom: true });
+                customInput.value = "";
+                renderFoodOptions();
+            }
+        }
 
-                li.addEventListener('click', () => {
-                    if (!Array.from(choiceList.children).some(child => child.textContent === option)) {
-                        const choiceLi = document.createElement('li');
-                        choiceLi.textContent = option;
-                        choiceLi.addEventListener('click', () => choiceLi.remove());
-                        choiceList.appendChild(choiceLi);
-                        options = options.filter(o => o !== option);
-                        renderLists();
-                        updateSubmitButton();
+        function submitChoices() {
+            const pointsMap = selectedChoices.map((index, rank) => {
+                const points = [4, 2, 1][rank] || 0;
+                foodOptions[index].points += points;
+                return { name: foodOptions[index].name, points: foodOptions[index].points };
+            });
+            alert("Choices submitted! Updated points: " + JSON.stringify(pointsMap));
+        }
+
+        window.onload = function () {
+            const passcode = prompt("Enter passcode:");
+            if (passcode) {
+                try {
+                    const decrypted = JSON.parse(atob(passcode));
+                    if (Array.isArray(decrypted) && decrypted.every(item => item.name && typeof item.points === "number")) {
+                        foodOptions = decrypted;
+                    } else {
+                        alert("Invalid passcode. Loading defaults.");
                     }
-                });
-
-                availableList.appendChild(li);
-            });
-
-            choiceList.innerHTML = '';
-        }
-
-        function updateSubmitButton() {
-            submitButton.disabled = choiceList.children.length < 5;
-        }
-
-        submitButton.addEventListener('click', async () => {
-            Array.from(choiceList.children).forEach((li, index) => {
-                const score = choiceList.children.length - index;
-                votes[li.textContent] = (votes[li.textContent] || 0) + score;
-            });
-
-            setCookie("voted", "true", 7);
-
-            const passcode = prompt("Re-enter your passcode to save:");
-            if (passcode) {
-                await saveConfig(passcode, { options, votes });
+                } catch {
+                    alert("Error decrypting passcode. Loading defaults.");
+                }
             }
-
-            displayResults();
-        });
-
-        function displayResults() {
-            const sortedVotes = Object.entries(votes).sort((a, b) => b[1] - a[1]);
-            resultsList.innerHTML = '';
-            sortedVotes.slice(0, 3).forEach(([name, score]) => {
-                const li = document.createElement('li');
-                li.textContent = `${name}: ${score} points`;
-                resultsList.appendChild(li);
-            });
-            resultsContainer.style.display = 'block';
-        }
-
-        resetAllButton.addEventListener('click', async () => {
-            options = [...defaultOptions];
-            votes = {};
-            const passcode = prompt("Re-enter your passcode to reset:");
-            if (passcode) {
-                await saveConfig(passcode, { options: defaultOptions, votes: {} });
-            }
-            renderLists();
-            resultsContainer.style.display = 'none';
-        });
-
-        initialize();
+            renderFoodOptions();
+        };
     </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Food Choice Selector</h1>
+        <ul id="food-list" class="food-list"></ul>
+        <input type="text" id="custom-input" placeholder="Add custom food">
+        <button onclick="addCustomOption()">Add</button>
+        <button onclick="submitChoices()">Submit</button>
+    </div>
 </body>
 </html>
